@@ -18,7 +18,15 @@
                         name="archived"
                         domain="[('active', '=', False)]"/>
                 
-                <filter string="Postcode" name="groupby_postcode" context="{'group_by': 'postcode'}" />
+                <filter 
+                        string="Postcode" 
+                        name="groupby_postcode" 
+                        context="{'group_by': 'postcode'}" />
+                
+                <filter 
+                        string="Property Type" 
+                        name="groupby_type" 
+                        context="{'group_by': 'estate_property_type_id'}" />
             </search>
         </field>
     </record>
@@ -44,6 +52,7 @@
                 <field name="expected_price"/>
                 <field name="selling_price"/>
                 <field name="date_availability"/>
+                <field name="estate_property_type_id"/>
             </list>
         </field>
     </record>
@@ -62,6 +71,8 @@
                             <field name="name"/>
                         </h1>
                     </div>
+
+                    <field name="tag_ids" widget="many2many_tags"/>
 
                     <!-- Información principal -->
                     <group>
@@ -88,6 +99,25 @@
                                 <field name="garden"/>
                                 <field name="garden_area"/>
                                 <field name="garden_orientation"/>
+                                <field name="estate_property_type_id" />
+                                <field name="active" />
+                            </group>
+                        </page>
+
+                        <page string="Offers">
+                            <field name="offer_ids">
+                                <list>
+                                    <field name="price"/>
+                                    <field name="partner_id"/>
+                                    <field name="status"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Other info">
+                            <group>
+                                <field name="salesperson_id" />
+                                <field name="buyer_id" />
                             </group>
                         </page>
                     </notebook>
