@@ -1,10 +1,11 @@
-from datetime import timedelta, date, datetime
+from datetime import timedelta, date
 from odoo import api, exceptions, fields, models
 
 
 class EstatePropertyOffers(models.Model):
     _name = "estate.property.offer"
     _description = "Offers of a property"
+    _offer = "price desc"
 
     price = fields.Float()
     status = fields.Selection(
@@ -52,6 +53,7 @@ class EstatePropertyOffers(models.Model):
             record.status = "accepted"
             record.property_id.selling_price = record.price
             record.property_id.buyer_id = record.partner_id
+            record.property_id.state = "offer accepted"
 
     def action_refuse_offer(self):
         for record in self:
@@ -60,6 +62,10 @@ class EstatePropertyOffers(models.Model):
                 record.property_id.selling_price = 0
             if record.property_id.buyer_id == record.partner_id:
                 record.property_id.buyer_id = None
+            if not any(
+                offer.status == "accepted" for offer in record.property_id.offer_ids
+            ):
+                record.property_id.state = "offer received"
 
     # SQL checks
     _check_price = models.Constraint(

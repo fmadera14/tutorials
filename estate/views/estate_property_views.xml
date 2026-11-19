@@ -52,7 +52,7 @@
                 <field name="expected_price"/>
                 <field name="selling_price"/>
                 <field name="date_availability"/>
-                <field name="estate_property_type_id"/>
+                <field name="estate_property_type_id" />
             </list>
         </field>
     </record>
@@ -64,8 +64,17 @@
         <field name="arch" type="xml">
             <form string="Property">
                 <header>
-                    <button name="action_sell_property" type="object" string="SOLD"/>
-                    <button name="action_cancel_property" type="object" string="CANCEL"/>
+                    <button name="action_sell_property"
+                            type="object"
+                            string="SOLD"
+                            invisible="state in ['sold', 'cancelled']"/>
+
+                    <button name="action_cancel_property"
+                            type="object"
+                            string="CANCEL"
+                            invisible="state in ['sold', 'cancelled']"/>
+
+                    <field name="state" widget="statusbar" />
                 </header>
                 <sheet>
 
@@ -77,13 +86,18 @@
                     </div>
                     
                     <group>
-                        <field name="state"/>
-                        <field name="tag_ids" widget="many2many_tags"/>
+                        <field name="tag_ids"
+                            widget="many2many_tags"
+                            options="{'color_field': 'color'}"/>
                     </group>
 
                     <!-- Información principal -->
                     <group>
                         <group>
+                            <field name="estate_property_type_id"
+                                    options="{
+                                        'no_create': True, 'no_quick_create': True, 'no_create_edit': True, 'no_open': True
+                                    }" />
                             <field name="postcode"/>
                             <field name="date_availability"/>
                         </group>
@@ -105,16 +119,16 @@
                                 <field name="facades"/>
                                 <field name="garage"/>
                                 <field name="garden"/>
-                                <field name="garden_orientation"/>
-                                <field name="garden_area" string="Garden Area (sqm)" />
+                                <field name="garden_orientation" invisible="not garden" />
+                                <field name="garden_area" string="Garden Area (sqm)" invisible="not garden" />
                                 <field name="total_area" string="Total Area (sqm)" />
-                                <field name="estate_property_type_id" />
                                 <field name="active" />
                             </group>
                         </page>
 
                         <page string="Offers">
-                            <field name="offer_ids">
+                            <field name="offer_ids"
+                                    readonly="state in ['offer accepted', 'sold', 'cancelled']">
                                 <list>
                                     <field name="price"/>
                                     <field name="partner_id"/>
@@ -123,10 +137,11 @@
                                     <button name="action_accept_offer"
                                             type="object"
                                             icon="fa-check"
-                                    />
+                                            invisible="status == 'accepted' or status == 'refused'" />
                                     <button name="action_refuse_offer"
                                             type="object"
-                                            icon="fa-close"/>
+                                            icon="fa-close"
+                                            invisible="status == 'accepted' or status == 'refused'" />
                                     <field name="status"/>
                                 </list>
                             </field>

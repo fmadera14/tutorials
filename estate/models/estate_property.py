@@ -5,6 +5,7 @@ from odoo.tools.float_utils import float_compare, float_is_zero
 class EstateProperty(models.Model):
     _name = "estate.property"
     _description = "Estate Property"
+    _order = "id desc"
 
     name = fields.Char(required=True)
     description = fields.Text()
@@ -101,7 +102,7 @@ class EstateProperty(models.Model):
     @api.constrains("selling_price")
     def check_selling_price(self):
         for record in self:
-            if (
+            if not float_is_zero(record.selling_price, precision_digits=2) and (
                 float_compare(
                     record.selling_price,
                     record.expected_price * 0.9,
