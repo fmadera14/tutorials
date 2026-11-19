@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, date, datetime
 from odoo import api, exceptions, fields, models
 
 
@@ -25,16 +25,22 @@ class EstatePropertyOffers(models.Model):
     def _compute_date_deadline(self):
         for record in self:
             if not record.create_date:
-                continue
-
-            record.date_deadline = record.create_date + timedelta(days=record.validity)
+                record.date_deadline = fields.Date.today() + timedelta(
+                    days=record.validity
+                )
+            else:
+                record.date_deadline = record.create_date + timedelta(
+                    days=record.validity
+                )
 
     def _inverse_date_deadline(self):
         for record in self:
             if not record.create_date:
-                continue
-
-            record.validity = (record.date_deadline - record.create_date.date()).days
+                record.validity = (record.date_deadline - date.today()).days
+            else:
+                record.validity = (
+                    record.date_deadline - record.create_date.date()
+                ).days
 
     def action_accept_offer(self):
         for record in self:
@@ -54,3 +60,9 @@ class EstatePropertyOffers(models.Model):
                 record.property_id.selling_price = 0
             if record.property_id.buyer_id == record.partner_id:
                 record.property_id.buyer_id = None
+
+    # SQL checks
+    _check_price = models.Constraint(
+        "CHECK(price >= 0)",
+        "The offer price should be extrictly positive.",
+    )

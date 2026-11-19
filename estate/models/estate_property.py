@@ -1,4 +1,5 @@
 from odoo import api, exceptions, fields, models
+from odoo.tools.float_utils import float_compare, float_is_zero
 
 
 class EstateProperty(models.Model):
@@ -84,3 +85,30 @@ class EstateProperty(models.Model):
             if record.state == "sold":
                 raise exceptions.UserError("Can't cancell a sold property.")
             record.state = "cancelled"
+
+    # SQL checks
+    _check_expected_price = models.Constraint(
+        "CHECK(expected_price >= 0)",
+        "The expected price should be extrictly positive.",
+    )
+
+    _check_selling_price = models.Constraint(
+        "CHECK(selling_price >= 0)",
+        "The expected price should be extrictly positive.",
+    )
+
+    # PYTHON checks
+    @api.constrains("selling_price")
+    def check_selling_price(self):
+        for record in self:
+            if (
+                float_compare(
+                    record.selling_price,
+                    record.expected_price * 0.9,
+                    precision_digits=2,
+                )
+                < 0
+            ):
+                raise exceptions.ValidationError(
+                    "The selling price must be at least 90% of the expected price"
+                )
