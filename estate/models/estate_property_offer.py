@@ -1,5 +1,5 @@
 from datetime import timedelta
-from odoo import api, fields, models
+from odoo import api, exceptions, fields, models
 
 
 class EstatePropertyOffers(models.Model):
@@ -35,3 +35,22 @@ class EstatePropertyOffers(models.Model):
                 continue
 
             record.validity = (record.date_deadline - record.create_date.date()).days
+
+    def action_accept_offer(self):
+        for record in self:
+            if any(
+                offer != self and offer.status == "accepted"
+                for offer in record.property_id.offer_ids
+            ):
+                raise exceptions.UserError("Already an offer accepted.")
+            record.status = "accepted"
+            record.property_id.selling_price = record.price
+            record.property_id.buyer_id = record.partner_id
+
+    def action_refuse_offer(self):
+        for record in self:
+            record.status = "refused"
+            if record.property_id.selling_price == record.price:
+                record.property_id.selling_price = 0
+            if record.property_id.buyer_id == record.partner_id:
+                record.property_id.buyer_id = None

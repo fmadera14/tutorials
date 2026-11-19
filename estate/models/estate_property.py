@@ -1,4 +1,4 @@
-from odoo import api, fields, models
+from odoo import api, exceptions, fields, models
 
 
 class EstateProperty(models.Model):
@@ -49,7 +49,7 @@ class EstateProperty(models.Model):
         string="Sales Person",
         default=lambda self: self.env.user,
     )
-    buyer_id = fields.Many2one("res.partner", string="Buyer", copy=False)
+    buyer_id = fields.Many2one("res.partner", string="Buyer", copy=False, readonly=True)
     tag_ids = fields.Many2many("estate.property.tag", string="Tag")
     offer_ids = fields.One2many("estate.property.offer", "property_id", string="Offers")
 
@@ -72,3 +72,15 @@ class EstateProperty(models.Model):
 
         self.garden_area = 0
         self.garden_orientation = False
+
+    def action_sell_property(self):
+        for record in self:
+            if record.state == "cancelled":
+                raise exceptions.UserError("Can't sell a cancelled property.")
+            record.state = "sold"
+
+    def action_cancel_property(self):
+        for record in self:
+            if record.state == "sold":
+                raise exceptions.UserError("Can't cancell a sold property.")
+            record.state = "cancelled"
