@@ -21,6 +21,12 @@ class EstatePropertyOffers(models.Model):
 
     partner_id = fields.Many2one("res.partner", string="Partner")
     property_id = fields.Many2one("estate.property", string="Property", required=True)
+    property_type_id = fields.Many2one(
+        "estate.property.type",
+        string="Property Type",
+        related="property_id.estate_property_type_id",
+        store=True,
+    )
 
     @api.depends("validity", "create_date")
     def _compute_date_deadline(self):
@@ -72,3 +78,26 @@ class EstatePropertyOffers(models.Model):
         "CHECK(price >= 0)",
         "The offer price should be extrictly positive.",
     )
+
+    # CRUD methods
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            property_record = self.env["estate.property"].browse(vals["property_id"])
+
+            existing_offers = property_record.offer_ids
+
+            if existing_offers:
+                highest_offer = max(existing_offers.mapped("price"))
+
+                if vals["price"] < highest_offer:
+                    raise exceptions.UserError(
+                        "The offer amount must be higher than existing offers."
+                    )
+
+        offers = super().create(vals_list)
+
+        for offer in offers:
+            offer.property_id.state = "offer received"
+
+        return offers

@@ -1,4 +1,5 @@
-from odoo import api, exceptions, fields, models
+from odoo import api, fields, models
+from odoo.exceptions import UserError, ValidationError
 from odoo.tools.float_utils import float_compare, float_is_zero
 
 
@@ -78,13 +79,13 @@ class EstateProperty(models.Model):
     def action_sell_property(self):
         for record in self:
             if record.state == "cancelled":
-                raise exceptions.UserError("Can't sell a cancelled property.")
+                raise UserError("Can't sell a cancelled property.")
             record.state = "sold"
 
     def action_cancel_property(self):
         for record in self:
             if record.state == "sold":
-                raise exceptions.UserError("Can't cancell a sold property.")
+                raise UserError("Can't cancell a sold property.")
             record.state = "cancelled"
 
     # SQL checks
@@ -110,6 +111,15 @@ class EstateProperty(models.Model):
                 )
                 < 0
             ):
-                raise exceptions.ValidationError(
+                raise ValidationError(
                     "The selling price must be at least 90% of the expected price"
+                )
+
+    # CRUD methods
+    @api.ondelete(at_uninstall=False)
+    def _unlink_property(self):
+        for record in self:
+            if record.state not in ["new", "cancelled"]:
+                raise UserError(
+                    "You cannot delete a property unless it is New or Cancelled."
                 )
